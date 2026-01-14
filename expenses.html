@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>खर्च व्यवस्थापन - यशोदीप क्लासेस</title>
+    <style>
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { color: #3498db; text-align: center; }
+        .sidebar a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #3e4f5f; }
+        
+        .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Language Switcher */
+        .lang-container { position: absolute; top: 20px; right: 25px; }
+        .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+
+        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+        .box { background: white; padding: 20px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .entry-section { background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #ddd; }
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; align-items: flex-end; }
+        
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        
+        .add-btn { background: #e74c3c; color: white; border: none; padding: 11px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .add-btn:hover { background: #c0392b; }
+
+        table { width: 100%; background: white; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #2c3e50; color: white; }
+        .loader { font-weight: bold; color: #e67e22; display: none; }
+    </style>
+</head>
+<body>
+
+     <div class="sidebar">
+        <h2 id="sideTitle">यशोदीप क्लासेस</h2>
+        <a href="dashboard.html"  id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="view-students.html" id="navStudentList">📋 विद्यार्थी यादी</a>
+        <a href="attendance.html" id="navAttendance">📅 हजेरी</a>
+        <a href="results.html" id="navResults">📊 मार्क अपडेट</a>
+        <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
+        <a href="expenses.html" style="background:#3498db" id="navExpenses">💸 खर्च व्यवस्थापन</a>
+        <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
+    </div>
+
+    <div class="main">
+        <div class="lang-container">
+            <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+        </div>
+        
+        <h2 id="pageTitle" style="color: #2c3e50;">💸 दैनंदिन खर्च आणि हिशोब</h2>
+
+        <div class="stats">
+            <div class="box"><h3 style="color: #27ae60;"><span id="lblInc">एकूण उत्पन्न</span>: <span id="totalIncome">₹ ०</span></h3></div>
+            <div class="box"><h3 style="color: #e74c3c;"><span id="lblExp">एकूण खर्च</span>: <span id="totalExpense">₹ ०</span></h3></div>
+            <div class="box"><h3 style="color: #3498db;"><span id="lblProfit">निव्वळ नफा</span>: <span id="netProfit">₹ ०</span></h3></div>
+        </div>
+
+        <div class="entry-section">
+            <h3 id="formTitle">नवीन खर्चाची नोंद करा <span id="saveLoader" class="loader">...</span></h3>
+            <div class="form-grid">
+                <div>
+                    <label id="lblDate">तारीख:</label>
+                    <input type="date" id="expDate">
+                </div>
+                <div>
+                    <label id="lblCat">खर्चाचा प्रकार:</label>
+                    <select id="expCategory"></select>
+                </div>
+                <div>
+                    <label id="lblAmt">रक्कम (₹):</label>
+                    <input type="number" id="expAmount" placeholder="0.00">
+                </div>
+                <button class="add-btn" id="addBtn" onclick="addExpense()">✅ खर्च नोंदवा</button>
+            </div>
+            <div style="margin-top: 10px;">
+                <label id="lblNote">तपशील (टीप):</label>
+                <input type="text" id="expNote" placeholder="...">
+            </div>
+        </div>
+
+        <div class="card" style="text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="tableTitle">खर्चाची यादी <span id="tableLoader" class="loader">(...)</span></h3>
+                <input type="month" id="filterMonth" style="width: 200px;" onchange="loadExpenses()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th id="thDate">तारीख</th>
+                        <th id="thCat">प्रकार</th>
+                        <th id="thNote">तपशील</th>
+                        <th id="thAmt">रक्कम (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody">
+                    <tr><td colspan="4" id="initialMsg">लोड होत आहे...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = sessionStorage.getItem("lang") || 'mr';
+
+        const langData = {
+            mr: {
+                sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navResults: "📊 निकाल/मार्क", navFees: "💰 फी रेकॉर्ड", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
+                pageTitle: "💸 दैनंदिन खर्च आणि हिशोब", lblInc: "एकूण उत्पन्न", lblExp: "एकूण खर्च", lblProfit: "निव्वळ नफा",
+                formTitle: "नवीन खर्चाची नोंद करा", lblDate: "तारीख:", lblCat: "खर्चाचा प्रकार:", lblAmt: "रक्कम (₹):", lblNote: "तपशील (टीप):", addBtn: "✅ खर्च नोंदवा",
+                tableTitle: "खर्चाची यादी", thDate: "तारीख", thCat: "प्रकार", thNote: "तपशील", thAmt: "रक्कम (₹)",
+                initialMsg: "कृपया माहिती लोड होईपर्यंत थांबा...", loaderSave: "...सेव्ह होत आहे", loaderTable: "(माहिती शोधत आहे...)",
+                alertFill: "कृपया तारीख आणि रक्कम भरा!", alertSuccess: "खर्चाची यशस्वी नोंद झाली!", langBtn: "English",
+                categories: ["लाईट बिल", "क्लास भाडे", "शिक्षकांचा पगार", "स्टेशनरी/प्रिंटिंग", "जाहिरात", "इतर खर्च"]
+            },
+            en: {
+                sideTitle: "Yashodeep Classes", navNewAdm: "📝 New Admission", navStudentList: "📋 Student List", navAttendance: "📅 Attendance", navResults: "📊 Marks/Results", navFees: "💰 Fee Records", navExpenses: "💸 Expenses", navLogout: "🚪 Log Out",
+                pageTitle: "💸 Daily Expenses & Accounts", lblInc: "Total Income", lblExp: "Total Expense", lblProfit: "Net Profit",
+                formTitle: "Record New Expense", lblDate: "Date:", lblCat: "Category:", lblAmt: "Amount (₹):", lblNote: "Details (Note):", addBtn: "✅ Add Expense",
+                tableTitle: "Expense List", thDate: "Date", thCat: "Type", thNote: "Details", thAmt: "Amount (₹)",
+                initialMsg: "Please wait while loading...", loaderSave: "...Saving", loaderTable: "(Searching...)",
+                alertFill: "Please fill date and amount!", alertSuccess: "Expense recorded successfully!", langBtn: "मराठी",
+                categories: ["Electricity Bill", "Class Rent", "Teacher Salary", "Stationery/Printing", "Marketing", "Other"]
+            }
+        };
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxW_E8lhPcNrG-rSRcCdofm19rD4o51kpowm44TuBojt0R619bgxVzvo8cXemKNfEHhwA/exec";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "index.html"; return; }
+            
+            document.getElementById('expDate').valueAsDate = new Date();
+            document.getElementById('filterMonth').value = new Date().toISOString().substring(0, 7);
+            
+            updateLanguageUI();
+            loadExpenses();
+        });
+
+        function toggleLang() {
+            currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+            sessionStorage.setItem("lang", currentLang);
+            updateLanguageUI();
+        }
+
+        function updateLanguageUI() {
+            const t = langData[currentLang];
+            for (let id in t) {
+                const el = document.getElementById(id);
+                if (el && typeof t[id] === 'string') el.innerText = t[id];
+            }
+            
+            // Update Categories Dropdown
+            const catSelect = document.getElementById('expCategory');
+            catSelect.innerHTML = "";
+            t.categories.forEach(cat => {
+                let opt = document.createElement("option");
+                opt.value = cat; opt.innerText = cat; catSelect.appendChild(opt);
+            });
+            
+            document.getElementById('langBtn').innerText = t.langBtn;
+        }
+
+        async function addExpense() {
+            const t = langData[currentLang];
+            const btn = document.getElementById('addBtn');
+            const loader = document.getElementById('saveLoader');
+            const date = document.getElementById('expDate').value;
+            const category = document.getElementById('expCategory').value;
+            const amount = document.getElementById('expAmount').value;
+            const note = document.getElementById('expNote').value;
+
+            if(!amount || !date) { alert(t.alertFill); return; }
+
+            btn.disabled = true;
+            loader.style.display = "inline";
+            loader.innerText = t.loaderSave;
+
+            try {
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', mode: 'no-cors', 
+                    body: JSON.stringify({ type: "AddExpense", date, category, amount, note }) 
+                });
+                alert(t.alertSuccess);
+                document.getElementById('expAmount').value = "";
+                document.getElementById('expNote').value = "";
+                loadExpenses();
+            } catch (e) { alert("Error!"); } 
+            finally { btn.disabled = false; loader.style.display = "none"; }
+        }
+
+        async function loadExpenses() {
+            const t = langData[currentLang];
+            const month = document.getElementById('filterMonth').value;
+            const tbody = document.getElementById('expenseTableBody');
+            const loader = document.getElementById('tableLoader');
+            
+            loader.style.display = "inline";
+            loader.innerText = t.loaderTable;
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getExpenses&month=${month}`);
+                const data = await response.json();
+                tbody.innerHTML = "";
+                let totalExp = 0;
+
+                if (!data.expenses || data.expenses.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan='4'>${currentLang === 'mr' ? 'माहिती उपलब्ध नाही.' : 'No data available.'}</td></tr>`;
+                } else {
+                    data.expenses.forEach(exp => {
+                        totalExp += Number(exp.amount);
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${exp.date}</td>
+                                <td>${exp.category}</td>
+                                <td>${exp.note}</td>
+                                <td style="color: red; font-weight: bold;">₹ ${exp.amount}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                document.getElementById('totalExpense').innerText = "₹ " + totalExp;
+                document.getElementById('netProfit').innerText = "₹ " + (0 - totalExp); // Income logic can be added later
+            } catch (e) { tbody.innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>"; } 
+            finally { loader.style.display = "none"; }
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

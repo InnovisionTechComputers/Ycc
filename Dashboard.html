@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>प्रवेश फॉर्म - यशोदीप क्लासेस</title>
+    <style>
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { color: #3498db; text-align: center; }
+        .sidebar a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #3e4f5f; transition: 0.3s; }
+        .sidebar a:hover { background: #34495e; padding-left: 25px; }
+        
+        .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Language Switcher */
+        .lang-container { position: absolute; top: 20px; right: 25px; }
+        .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        
+        .subject-container { background: #f9f9f9; padding: 15px; border: 1px dashed #3498db; border-radius: 8px; margin: 20px 0; display: none; }
+        .subject-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        
+        .prn-box { background: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 5px; font-weight: bold; color: #856404; margin: 20px 0; text-align: center; font-size: 18px; }
+        .submit-btn { background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 id="sideTitle">यशोदीप क्लासेस</h2>
+        <a href="dashboard.html" style="background:#3498db" id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="view-students.html" id="navStudentList">📋 विद्यार्थी यादी</a>
+        <a href="attendance.html" id="navAttendance">📅 हजेरी</a>
+        <a href="results.html" id="navResults">📊 मार्क अपडेट</a>
+        <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
+        <a href="expenses.html" id="navExpenses">💸 खर्च व्यवस्थापन</a>
+        <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <div class="lang-container">
+                <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+            </div>
+            
+            <h2 id="formTitle" style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">विद्यार्थी नवीन प्रवेश फॉर्म</h2>
+            
+            <form id="admissionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label id="lblStudentName">विद्यार्थ्याचे पूर्ण नाव:</label>
+                        <input type="text" id="studentName" placeholder="नाव भरा" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="lblDob">जन्मतारीख (DOB):</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="lblClass">प्रवेशाचा वर्ग:</label>
+                        <select id="cls" onchange="updateUI()" required>
+                            <option value="" id="optSelectClass">-- वर्ग निवडा --</option>
+                            <option value="5">५ वी</option>
+                            <option value="6">६ वी</option>
+                            <option value="7">७ वी</option>
+                            <option value="8">८ वी</option>
+                            <option value="9">९ वी</option>
+                            <option value="10">१० वी</option>
+                            <option value="11">११ वी</option>
+                            <option value="12">१२ वी</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="lblSchool">शाळा / कॉलेजचे नाव:</label>
+                        <input type="text" id="school" placeholder="शाळेचे नाव">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblStudentPhone">विद्यार्थ्याचा फोन नंबर:</label>
+                        <input type="tel" id="studentPhone" placeholder="10 अंकी नंबर" maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label id="lblParentPhone">पालकांचा फोन नंबर (WhatsApp):</label>
+                        <input type="tel" id="parentPhone" placeholder="10 अंकी नंबर" maxlength="10" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label id="lblAddress">पूर्ण पत्ता:</label>
+                    <textarea id="address" placeholder="पत्ता भरा..."></textarea>
+                </div>
+
+                <div id="subjectSection" class="subject-container">
+                    <label id="lblSubjectTitle" style="color:#2c3e50">📖 वर्गाचे विषय निवडा:</label>
+                    <div id="subjectList" class="subject-grid"></div>
+                </div>
+
+                <div id="prnRes" class="prn-box">PRN: वर्ग निवडल्यानंतर येथे जनरेट होईल</div>
+
+                <button type="button" id="submitBtn" class="submit-btn" onclick="saveStudent()">विद्यार्थी नोंदणी पूर्ण करा</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = sessionStorage.getItem("lang") || 'mr';
+
+        const langData = {
+            mr: {
+                sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navResults: "📊 मार्क अपडेट", navFees: "💰 फी रेकॉर्ड", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
+                formTitle: "विद्यार्थी नवीन प्रवेश फॉर्म", lblStudentName: "विद्यार्थ्याचे पूर्ण नाव:", lblDob: "जन्मतारीख (DOB):", lblClass: "प्रवेशाचा वर्ग:", optSelectClass: "-- वर्ग निवडा --", lblSchool: "शाळा / कॉलेजचे नाव:", lblStudentPhone: "विद्यार्थ्याचा फोन नंबर:", lblParentPhone: "पालकांचा फोन नंबर (WhatsApp):", lblAddress: "पूर्ण पत्ता:", lblSubjectTitle: "📖 वर्गाचे विषय निवडा:", submitBtn: "विद्यार्थी नोंदणी पूर्ण करा",
+                prnEmpty: "PRN: वर्ग निवडल्यानंतर येथे जनरेट होईल", prnText: "विद्यार्थ्यासाठी प्रस्तावित PRN: ", alertFill: "कृपया नाव, वर्ग आणि पालकांचा फोन नंबर भरा!", alertSuccess: "विद्यार्थी डेटा यशस्वीरित्या सेव्ह झाला!", alertError: "त्रुटी आली! कृपया इंटरनेट कनेक्शन तपासा.", langBtn: "English"
+            },
+            en: {
+                sideTitle: "Yashodeep Classes", navNewAdm: "📝 New Admission", navStudentList: "📋 Student List", navAttendance: "📅 Attendance", navResults: "📊 Update Marks", navFees: "💰 Fee Records", navExpenses: "💸 Expenses", navLogout: "🚪 Log Out",
+                formTitle: "Student Admission Form", lblStudentName: "Student Full Name:", lblDob: "Date of Birth (DOB):", lblClass: "Admission Class:", optSelectClass: "-- Select Class --", lblSchool: "School / College Name:", lblStudentPhone: "Student Phone No:", lblParentPhone: "Parent Phone (WhatsApp):", lblAddress: "Full Address:", lblSubjectTitle: "📖 Select Class Subjects:", submitBtn: "Complete Student Registration",
+                prnEmpty: "PRN: Will generate after selecting class", prnText: "Proposed PRN for Student: ", alertFill: "Please fill Name, Class and Parent Phone!", alertSuccess: "Student data saved successfully!", alertError: "Error occurred! Please check internet connection.", langBtn: "मराठी"
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+            const role = sessionStorage.getItem("userRole");
+
+            if (isLoggedIn !== "true") { window.location.href = "index.html"; return; }
+
+            if (role === "md") {
+                const feeLink = document.getElementById("navFees");
+                const expLink = document.getElementById("navExpenses");
+                if (feeLink) feeLink.style.display = "none";
+                if (expLink) expLink.style.display = "none";
+            }
+            updateLanguageUI();
+        });
+
+        function toggleLang() {
+            currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+            sessionStorage.setItem("lang", currentLang);
+            updateLanguageUI();
+            updateUI(); // PRN मजकूर अपडेट करण्यासाठी
+        }
+
+        function updateLanguageUI() {
+            const t = langData[currentLang];
+            for (let id in t) {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") el.placeholder = t[id];
+                    else el.innerText = t[id];
+                }
+            }
+        }
+
+        function updateUI() {
+            genPRN();
+            showSubjects();
+        }
+
+        function genPRN() {
+            let c = document.getElementById('cls').value;
+            let d = document.getElementById('prnRes');
+            const t = langData[currentLang];
+            if(c) {
+                let prefix = (c == "10") ? "100" : (c == "12") ? "120" : (c == "11") ? "110" : c + "00";
+                d.innerText = t.prnText + prefix + "001";
+            } else {
+                d.innerText = t.prnEmpty;
+            }
+        }
+
+        function showSubjects() {
+            let c = document.getElementById('cls').value;
+            let section = document.getElementById('subjectSection');
+            let list = document.getElementById('subjectList');
+            list.innerHTML = ""; 
+            if(!c) { section.style.display = "none"; return; }
+            section.style.display = "block";
+            let subjects = [];
+            let compulsory = false;
+            if(["5", "6", "7", "8"].includes(c)) { subjects = ["इंग्लिश", "गणित", "सायन्स"]; compulsory = true; }
+            else if(["9", "10"].includes(c)) { subjects = ["इंग्लिश", "गणित १", "गणित २", "सायन्स १", "सायन्स २"]; }
+            else if(["11", "12"].includes(c)) { subjects = ["गणित", "Physics", "Chemistry", "Biology"]; }
+
+            subjects.forEach(sub => {
+                let checkAttr = compulsory ? "checked onclick='return false;'" : "checked";
+                list.innerHTML += `<div class="subject-item"><input type="checkbox" name="subjects" value="${sub}" ${checkAttr}> <span>${sub}</span></div>`;
+            });
+        }
+
+        function saveStudent() {
+            const t = langData[currentLang];
+            const btn = document.getElementById('submitBtn');
+            const name = document.getElementById('studentName').value;
+            const parentPhone = document.getElementById('parentPhone').value;
+            const studentClass = document.getElementById('cls').value;
+
+            if(!name || !parentPhone || !studentClass) { alert(t.alertFill); return; }
+
+            btn.disabled = true;
+            btn.innerText = (currentLang === 'mr') ? "सेव्ह होत आहे..." : "Saving...";
+
+            let studentData = {
+                type: "Students",
+                prn: document.getElementById('prnRes').innerText.split(": ")[1],
+                name: name,
+                dob: document.getElementById('dob').value,
+                class: studentClass,
+                parentPhone: parentPhone
+            };
+
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIVmoPVC0ZMp9SFjRJBnPShsmjeEDO3FZnG8zPtNpNAm7IoJGoG2TOJeuSH0vEGEAKzw/exec";
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(studentData)
+            })
+            .then(() => {
+                alert(t.alertSuccess);
+                document.getElementById('admissionForm').reset();
+                updateUI();
+            })
+            .catch(err => alert(t.alertError))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = t.submitBtn;
+            });
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

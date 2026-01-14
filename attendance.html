@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>हजेरी व्यवस्थापन - यशोदीप क्लासेस</title>
+    <style>
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { color: #3498db; text-align: center; }
+        .sidebar a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #3e4f5f; transition: 0.3s; }
+        .sidebar a:hover { background: #34495e; padding-left: 25px; }
+
+        .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Language Switcher */
+        .lang-container { position: absolute; top: 20px; right: 25px; }
+        .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #e8f4fd; padding: 15px; border-radius: 8px; }
+        label { font-weight: bold; color: #333; }
+        select, input[type="date"] { padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin-left: 5px; margin-right: 15px; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        .btn-save { background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        .btn-save:hover { background: #2980b9; }
+        
+        .wa-btn { background: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0 auto; }
+        .auto-mode { background: #ffeb3b; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #fbc02d; color: #333; }
+        #loader { font-weight: bold; color: #e67e22; display: none; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+     <div class="sidebar">
+        <h2 id="sideTitle">यशोदीप क्लासेस</h2>
+        <a href="dashboard.html"  id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="view-students.html" id="navStudentList">📋 विद्यार्थी यादी</a>
+        <a href="attendance.html" style="background:#3498db" id="navAttendance">📅 हजेरी</a>
+        <a href="results.html" id="navResults">📊 मार्क अपडेट</a>
+        <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
+        <a href="expenses.html" id="navExpenses">💸 खर्च व्यवस्थापन</a>
+        <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <div class="lang-container">
+                <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+            </div>
+
+            <h2 id="pageTitle" style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">दैनिक हजेरी (Attendance Sheet)</h2>
+            
+            <div class="controls">
+                <div>
+                    <label id="lblDate">तारीख: </label>
+                    <input type="date" id="attDate">
+                    
+                    <label id="lblClass"> वर्ग निवडा: </label>
+                    <select id="classFilter" onchange="loadStudentsForAttendance()">
+                        <option value="" id="optSelect">-- निवडा --</option>
+                        <option value="5">५ वी</option>
+                        <option value="6">६ वी</option>
+                        <option value="7">७ वी</option>
+                        <option value="8">८ वी</option>
+                        <option value="9">९ वी</option>
+                        <option value="10">१० वी</option>
+                        <option value="11">११ वी</option>
+                        <option value="12">१२ वी</option>
+                    </select>
+                    <span id="loader">लोड होत आहे...</span>
+                </div>
+                <div>
+                    <label style="font-size: 12px;" id="lblAutoNotify">Auto-Notify</label>
+                    <input type="checkbox" id="autoNotifyToggle" checked>
+                    <span class="auto-mode">🔔 ON</span>
+                </div>
+            </div>
+
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>PRN</th>
+                        <th id="thName">विद्यार्थ्याचे नाव</th>
+                        <th id="thMark">हजेरी लावा</th>
+                        <th id="thNotify">पालकांना कळवा</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceRows">
+                    <tr>
+                        <td colspan="4" id="initialMsg">कृपया वरील वर्ग निवडा...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 25px; text-align: right;">
+                <button class="btn-save" id="saveBtn" onclick="uploadAttendance()">✅ हजेरी सेव्ह करा (Save)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = sessionStorage.getItem("lang") || 'mr';
+
+        const langData = {
+            mr: {
+                sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navResults: "📊 निकाल/मार्क", navFees: "💰 फी रेकॉर्ड", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
+                pageTitle: "दैनिक हजेरी (Attendance Sheet)", lblDate: "तारीख: ", lblClass: "वर्ग निवडा: ", optSelect: "-- निवडा --", lblAutoNotify: "Auto-Notify", thName: "विद्यार्थ्याचे नाव", thMark: "हजेरी लावा", thNotify: "पालकांना कळवा", initialMsg: "कृपया वरील वर्ग निवडा...",
+                loader: "लोड होत आहे...", present: "हजर", absent: "गैरहजर", saveBtn: "✅ हजेरी सेव्ह करा (Save)", langBtn: "English",
+                waMsg: "*यशोदीप क्लासेस - हजेरी अपडेट*%0A%0Aनमस्कार, कळवण्यात येते की आपला मुलगा/मुलगी *{name}* आज दिनांक *{date}* रोजी क्लासमध्ये *गैरहजर* आहे. कृपया याची नोंद घ्यावी.",
+                confirmWA: " विद्यार्थी गैरहजर आहेत. त्यांना WhatsApp मेसेज पाठवायचे का?", alertSuccess: "हजेरी यशस्वीरित्या सेव्ह झाली!", alertSelect: "आधी वर्ग निवडा!"
+            },
+            en: {
+                sideTitle: "Yashodeep Classes", navNewAdm: "📝 New Admission", navStudentList: "📋 Student List", navAttendance: "📅 Attendance", navResults: "📊 Marks/Results", navFees: "💰 Fees Record", navExpenses: "💸 Expenses", navLogout: "🚪 Log Out",
+                pageTitle: "Daily Attendance Sheet", lblDate: "Date: ", lblClass: "Select Class: ", optSelect: "-- Select --", lblAutoNotify: "Auto-Notify", thName: "Student Name", thMark: "Mark Attendance", thNotify: "Notify Parent", initialMsg: "Please select a class...",
+                loader: "Loading...", present: "Present", absent: "Absent", saveBtn: "✅ Save Attendance", langBtn: "मराठी",
+                waMsg: "*Yashodeep Classes - Attendance Update*%0A%0AHello, this is to inform you that your child *{name}* is *Absent* today ({date}). Please take note.",
+                confirmWA: " students are absent. Send WhatsApp notifications?", alertSuccess: "Attendance saved successfully!", alertSelect: "Please select a class first!"
+            }
+        };
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL-qXRUzRf6_kd5UO404p0DaTnYytq-RkxQ2tQCvhac0yziN2yfbx_H9wr-8X6irFrQQ/exec";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+            const role = sessionStorage.getItem("userRole");
+            if (isLoggedIn !== "true") { window.location.href = "index.html"; return; }
+            if (role === "md") {
+                document.getElementById("navFees").style.display = "none";
+                document.getElementById("navExpenses").style.display = "none";
+            }
+            document.getElementById('attDate').valueAsDate = new Date();
+            updateLanguageUI();
+        });
+
+        function toggleLang() {
+            currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+            sessionStorage.setItem("lang", currentLang);
+            updateLanguageUI();
+            loadStudentsForAttendance(); // टेबलचा डेटा रिफ्रेश करण्यासाठी
+        }
+
+        function updateLanguageUI() {
+            const t = langData[currentLang];
+            for (let id in t) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = t[id];
+            }
+        }
+
+        async function loadStudentsForAttendance() {
+            const selectedClass = document.getElementById('classFilter').value;
+            const tbody = document.getElementById('attendanceRows');
+            const loader = document.getElementById('loader');
+            const t = langData[currentLang];
+
+            if (!selectedClass) {
+                tbody.innerHTML = `<tr><td colspan="4">${t.initialMsg}</td></tr>`;
+                return;
+            }
+
+            loader.style.display = "inline";
+            tbody.innerHTML = `<tr><td colspan="4">${t.loader}</td></tr>`;
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=read&className=Class ${selectedClass}`);
+                const data = await response.json();
+                tbody.innerHTML = "";
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4">No students found.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(student => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-phone', student.parentPhone);
+                    tr.innerHTML = `
+                        <td>${student.prn}</td>
+                        <td class="st-name">${student.name}</td>
+                        <td>
+                            <input type="radio" name="status_${student.prn}" value="P" checked> <span style="color: green; font-weight: bold;">${t.present}</span> 
+                            <input type="radio" name="status_${student.prn}" value="A" style="margin-left: 10px;"> <span style="color: red; font-weight: bold;">${t.absent}</span>
+                        </td>
+                        <td>
+                            <button class="wa-btn" onclick="sendWhatsApp('${student.name}', '${student.parentPhone}')">
+                                <span>WhatsApp</span> 📲
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                alert("Error loading list!");
+            } finally {
+                loader.style.display = "none";
+            }
+        }
+
+        function uploadAttendance() {
+            const t = langData[currentLang];
+            const btn = document.getElementById('saveBtn');
+            const className = document.getElementById('classFilter').value;
+            const date = document.getElementById('attDate').value;
+            const rows = document.querySelectorAll('#attendanceRows tr');
+            const isAutoNotify = document.getElementById('autoNotifyToggle').checked;
+
+            if (!className || rows.length === 0 || rows[0].cells.length < 2) {
+                alert(t.alertSelect);
+                return;
+            }
+
+            let records = [];
+            let absentStudents = [];
+
+            rows.forEach(row => {
+                const prn = row.cells[0].innerText;
+                const name = row.querySelector('.st-name').innerText;
+                const phone = row.getAttribute('data-phone');
+                const status = row.querySelector(`input[name="status_${prn}"]:checked`).value;
+                records.push({ prn, name, status });
+                if (status === "A") absentStudents.push({ name, phone });
+            });
+
+            btn.disabled = true;
+            btn.innerText = (currentLang === 'mr') ? "सेव्ह होत आहे..." : "Saving...";
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ type: "Attendance", date: date, className: "Class " + className, records: records })
+            })
+            .then(() => {
+                alert(t.alertSuccess);
+                if (isAutoNotify && absentStudents.length > 0) {
+                    if (confirm(absentStudents.length + t.confirmWA)) {
+                        absentStudents.forEach((st, idx) => {
+                            setTimeout(() => sendWhatsApp(st.name, st.phone), idx * 1500);
+                        });
+                    }
+                }
+            })
+            .catch(err => alert("Error: " + err))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = t.saveBtn;
+            });
+        }
+
+        function sendWhatsApp(name, phone) {
+            const t = langData[currentLang];
+            let date = document.getElementById('attDate').value;
+            let formattedDate = new Date(date).toLocaleDateString(currentLang === 'mr' ? 'mr-IN' : 'en-IN');
+            
+            let message = t.waMsg.replace("{name}", name).replace("{date}", formattedDate);
+            let cleanPhone = phone.toString().replace(/\D/g, '');
+            if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
+
+            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>विद्यार्थी यादी - यशोदीप क्लासेस</title>
+    <style>
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { color: #3498db; text-align: center; }
+        .sidebar a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #3e4f5f; }
+        
+        .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Language Switcher */
+        .lang-container { position: absolute; top: 20px; right: 25px; }
+        .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+
+        .filter-section { margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; display: flex; align-items: center; gap: 15px; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #3498db; font-size: 16px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        #loader { font-weight: bold; color: #e67e22; display: none; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 id="sideTitle">यशोदीप क्लासेस</h2>
+        <a href="dashboard.html"  id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="view-students.html" style="background:#3498db" id="navStudentList">📋 विद्यार्थी यादी</a>
+        <a href="attendance.html" id="navAttendance">📅 हजेरी</a>
+        <a href="results.html"  id="navResults">📊 मार्क अपडेट</a>
+        <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
+        <a href="expenses.html" id="navExpenses">💸 खर्च व्यवस्थापन</a>
+        <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <div class="lang-container">
+                <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+            </div>
+
+            <h2 id="pageTitle">नोंदणीकृत विद्यार्थी यादी</h2>
+            
+            <div class="filter-section">
+                <label><strong id="lblSelectClass">वर्गानुसार यादी पहा:</strong></label>
+                <select id="classSelect" onchange="loadClassData()">
+                    <option value="" id="optDefault">-- वर्ग निवडा --</option>
+                    <option value="5">५ वी</option><option value="6">६ वी</option>
+                    <option value="7">७ वी</option><option value="8">८ वी</option>
+                    <option value="9">९ वी</option><option value="10">१० वी</option>
+                    <option value="11">११ वी</option><option value="12">१२ वी</option>
+                </select>
+                <span id="loader">माहिती लोड होत आहे...</span>
+            </div>
+
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>PRN</th>
+                        <th id="thName">नाव</th>
+                        <th id="thPhone">फोन नंबर</th>
+                        <th id="thDOB">जन्मतारीख</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="4" style="text-align:center;" id="initialMsg">कृपया वर्ग निवडा...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = sessionStorage.getItem("lang") || 'mr';
+
+        const langData = {
+            mr: {
+                sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navResults: "📊 निकाल/मार्क", navFees: "💰 फी रेकॉर्ड", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
+                pageTitle: "नोंदणीकृत विद्यार्थी यादी", lblSelectClass: "वर्गानुसार यादी पहा:", optDefault: "-- वर्ग निवडा --",
+                thName: "नाव", thPhone: "फोन नंबर", thDOB: "जन्मतारीख", initialMsg: "कृपया वर्ग निवडा...",
+                loader: "माहिती लोड होत आहे...", noData: "या वर्गात अद्याप कोणीही विद्यार्थी नाही.", alertError: "डेटा लोड करताना त्रुटी आली!", langBtn: "English"
+            },
+            en: {
+                sideTitle: "Yashodeep Classes", navNewAdm: "📝 New Admission", navStudentList: "📋 Student List", navAttendance: "📅 Attendance", navResults: "📊 Marks/Results", navFees: "💰 Fee Records", navExpenses: "💸 Expenses", navLogout: "🚪 Log Out",
+                pageTitle: "Registered Student List", lblSelectClass: "View List by Class:", optDefault: "-- Select Class --",
+                thName: "Name", thPhone: "Phone Number", thDOB: "Date of Birth", initialMsg: "Please select a class...",
+                loader: "Loading data...", noData: "No students found in this class.", alertError: "Error loading data!", langBtn: "मराठी"
+            }
+        };
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL-qXRUzRf6_kd5UO404p0DaTnYytq-RkxQ2tQCvhac0yziN2yfbx_H9wr-8X6irFrQQ/exec";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const role = sessionStorage.getItem("userRole");
+            if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "index.html"; return; }
+            
+            // MD साठी फी आणि खर्च लपवणे
+            if (role === "md") {
+                const feeLink = document.getElementById("navFees");
+                const expLink = document.getElementById("navExpenses");
+                if (feeLink) feeLink.style.display = "none";
+                if (expLink) expLink.style.display = "none";
+            }
+            updateLanguageUI();
+        });
+
+        function toggleLang() {
+            currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+            sessionStorage.setItem("lang", currentLang);
+            updateLanguageUI();
+            loadClassData(); // भाषा बदलल्यावर डेटा पुन्हा दाखवण्यासाठी
+        }
+
+        function updateLanguageUI() {
+            const t = langData[currentLang];
+            for (let id in t) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = t[id];
+            }
+        }
+
+        async function loadClassData() {
+            const selectedClass = document.getElementById('classSelect').value;
+            const tableBody = document.getElementById('tableBody');
+            const loader = document.getElementById('loader');
+            const t = langData[currentLang];
+
+            if (!selectedClass) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">${t.initialMsg}</td></tr>`;
+                return;
+            }
+
+            loader.style.display = "inline";
+            loader.innerText = t.loader;
+            tableBody.innerHTML = "";
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=read&className=Class ${selectedClass}`);
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">${t.noData}</td></tr>`;
+                } else {
+                    data.forEach(student => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${student.prn}</td>
+                            <td>${student.name}</td>
+                            <td>${student.parentPhone}</td>
+                            <td>${student.dob}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                alert(t.alertError);
+            } finally {
+                loader.style.display = "none";
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

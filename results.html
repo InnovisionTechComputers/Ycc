@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>मार्क अपडेट - यशोदीप क्लासेस</title>
+    <style>
+        body { display: flex; font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { color: #3498db; text-align: center; }
+        .sidebar a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #3e4f5f; transition: 0.3s; }
+        .sidebar a:hover { background: #34495e; padding-left: 25px; }
+        
+        .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Language Switcher */
+        .lang-container { position: absolute; top: 20px; right: 25px; }
+        .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+
+        .filter-section { display: flex; gap: 20px; background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; align-items: flex-end; }
+        .filter-group { flex: 1; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
+        select, input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #3498db; color: white; }
+        
+        .mark-input { width: 80px; text-align: center; padding: 8px; border: 1px solid #3498db; border-radius: 4px; }
+        .remark-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .save-btn { background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 20px; float: right; transition: 0.3s; }
+        .save-btn:hover { background: #219150; }
+        
+        .btn-view { background: #3498db; color: white; border: none; padding: 11px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #loader { display: none; color: #e67e22; font-weight: bold; margin-top: 10px; }
+        .wa-btn { background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+     <div class="sidebar">
+        <h2 id="sideTitle">यशोदीप क्लासेस</h2>
+        <a href="dashboard.html"  id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="view-students.html" id="navStudentList">📋 विद्यार्थी यादी</a>
+        <a href="attendance.html" id="navAttendance">📅 हजेरी</a>
+        <a href="results.html" style="background:#3498db" id="navResults">📊 मार्क अपडेट</a>
+        <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
+        <a href="expenses.html" id="navExpenses">💸 खर्च व्यवस्थापन</a>
+        <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <div class="lang-container">
+                <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+            </div>
+
+            <h2 id="pageTitle" style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">विद्यार्थी मार्क अपडेट पोर्टल</h2>
+            
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label id="lblClass">वर्ग निवडा:</label>
+                    <select id="resClass" onchange="updateSubjects()">
+                        <option value="" id="optSelect">-- निवडा --</option>
+                        <option value="5">५ वी</option><option value="6">६ वी</option>
+                        <option value="7">७ वी</option><option value="8">८ वी</option>
+                        <option value="9">९ वी</option><option value="10">१० वी</option>
+                        <option value="11">११ वी</option><option value="12">१२ वी</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label id="lblSubject">विषय निवडा:</label>
+                    <select id="resSubject">
+                        <option value="" id="optSubWait">-- आधी वर्ग निवडा --</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label id="lblExam">परीक्षेचे नाव:</label>
+                    <select id="examType"></select>
+                </div>
+                <button class="btn-view" id="btnView" onclick="loadStudentsForMarks()">यादी पहा</button>
+            </div>
+
+            <div id="loader">माहिती लोड होत आहे, कृपया थांबा...</div>
+
+            <div id="studentListContainer" style="display:none;">
+                <h3 id="currentSelectionLabel" style="color: #2c3e50; margin-top: 20px;"></h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PRN</th>
+                            <th id="thName">विद्यार्थ्याचे नाव</th>
+                            <th id="thTotal">एकूण गुण</th>
+                            <th id="thObtained">मिळालेले गुण</th>
+                            <th id="thRemark">शेरा (Remarks)</th>
+                            <th>WhatsApp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="markRows"></tbody>
+                </table>
+                <button class="save-btn" id="saveMarksBtn" onclick="saveMarks()">मार्क सेव्ह करा (Save)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = sessionStorage.getItem("lang") || 'mr';
+
+        const langData = {
+            mr: {
+                sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navFees: "💰 फी रेकॉर्ड", navResults: "📊 निकाल/मार्क", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
+                pageTitle: "विद्यार्थी मार्क अपडेट पोर्टल", lblClass: "वर्ग निवडा:", lblSubject: "विषय निवडा:", lblExam: "परीक्षेचे नाव:", optSelect: "-- निवडा --", optSubWait: "-- आधी वर्ग निवडा --", btnView: "यादी पहा",
+                thName: "विद्यार्थ्याचे नाव", thTotal: "एकूण गुण", thObtained: "मिळालेले गुण", thRemark: "शेरा (Remarks)", saveMarksBtn: "मार्क सेव्ह करा (Save)", langBtn: "English",
+                loader: "माहिती लोड होत आहे...", alertSelect: "कृपया वर्ग आणि विषय निवडा!", alertSaved: "मार्क यशस्वीरित्या सेव्ह झाले!", confirmWA: "सर्व पालकांना निकालाचे मेसेज पाठवायचे का?",
+                exams: ["युनिट टेस्ट १", "सहामाही परीक्षा", "युनिट टेस्ट २", "वार्षिक परीक्षा"],
+                subjects: { basic: ["इंग्लिश", "गणित", "सायन्स"], secondary: ["इंग्लिश", "गणित १", "गणित २", "सायन्स १", "सायन्स २"], higher: ["गणित", "Physics", "Chemistry", "Biology"] },
+                waMsg: "*यशोदीप क्लासेस - परीक्षा निकाल*%0A%0Aनमस्कार, कळवण्यात येते की आपला मुलगा/मुलगी *{name}* याचा *{exam}* परीक्षेचा निकाल जाहीर झाला आहे.%0A%0A*विषय:* {subject}%0A*मिळालेले गुण:* {obtained} / {total}%0A%0Aधन्यवाद!"
+            },
+            en: {
+                sideTitle: "Yashodeep Classes", navNewAdm: "📝 New Admission", navStudentList: "📋 Student List", navAttendance: "📅 Attendance", navFees: "💰 Fees Record", navResults: "📊 Marks/Results", navExpenses: "💸 Expenses", navLogout: "🚪 Log Out",
+                pageTitle: "Student Marks Portal", lblClass: "Select Class:", lblSubject: "Select Subject:", lblExam: "Exam Type:", optSelect: "-- Select --", optSubWait: "-- Select Class First --", btnView: "View List",
+                thName: "Student Name", thTotal: "Total Marks", thObtained: "Obtained Marks", thRemark: "Remark", saveMarksBtn: "Save Marks", langBtn: "मराठी",
+                loader: "Loading data, please wait...", alertSelect: "Please select class and subject!", alertSaved: "Marks saved successfully!", confirmWA: "Send result messages to all parents?",
+                exams: ["Unit Test 1", "Semester Exam", "Unit Test 2", "Final Exam"],
+                subjects: { basic: ["English", "Maths", "Science"], secondary: ["English", "Maths 1", "Maths 2", "Science 1", "Science 2"], higher: ["Maths", "Physics", "Chemistry", "Biology"] },
+                waMsg: "*Yashodeep Classes - Result Update*%0A%0AHello, this is to inform you that the result for *{name}* for the *{exam}* has been declared.%0A%0A*Subject:* {subject}%0A*Marks:* {obtained} / {total}%0A%0AThank you!"
+            }
+        };
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL-qXRUzRf6_kd5UO404p0DaTnYytq-RkxQ2tQCvhac0yziN2yfbx_H9wr-8X6irFrQQ/exec";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "index.html"; return; }
+            const role = sessionStorage.getItem("userRole");
+            if (role === "md") {
+                document.getElementById("navFees").style.display = "none";
+                document.getElementById("navExpenses").style.display = "none";
+            }
+            updateLanguageUI();
+        });
+
+        function toggleLang() {
+            currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+            sessionStorage.setItem("lang", currentLang);
+            updateLanguageUI();
+            updateSubjects(); // विषय रिफ्रेश करण्यासाठी
+        }
+
+        function updateLanguageUI() {
+            const t = langData[currentLang];
+            for (let id in t) {
+                const el = document.getElementById(id);
+                if (el && typeof t[id] === 'string') el.innerText = t[id];
+            }
+            
+            // Exam Dropdown Update
+            const examSelect = document.getElementById('examType');
+            examSelect.innerHTML = "";
+            t.exams.forEach(ex => {
+                let opt = document.createElement("option");
+                opt.value = ex; opt.innerText = ex; examSelect.appendChild(opt);
+            });
+        }
+
+        function updateSubjects() {
+            let c = document.getElementById('resClass').value;
+            let s = document.getElementById('resSubject');
+            const t = langData[currentLang];
+            s.innerHTML = "";
+            if(!c) { s.innerHTML = `<option value=''>${t.optSubWait}</option>`; return; }
+
+            let subs = [];
+            if(["5", "6", "7", "8"].includes(c)) subs = t.subjects.basic;
+            else if(["9", "10"].includes(c)) subs = t.subjects.secondary;
+            else if(["11", "12"].includes(c)) subs = t.subjects.higher;
+
+            subs.forEach(sub => {
+                let opt = document.createElement("option");
+                opt.value = sub; opt.innerText = sub; s.appendChild(opt);
+            });
+        }
+
+        async function loadStudentsForMarks() {
+            const t = langData[currentLang];
+            const className = document.getElementById('resClass').value;
+            const subject = document.getElementById('resSubject').value;
+            const exam = document.getElementById('examType').value;
+            if (!className || !subject) { alert(t.alertSelect); return; }
+
+            const loader = document.getElementById('loader');
+            loader.style.display = "block";
+            document.getElementById('studentListContainer').style.display = "none";
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=read&className=Class ${className}`);
+                const data = await response.json();
+                const tbody = document.getElementById('markRows');
+                tbody.innerHTML = "";
+
+                data.forEach(student => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-phone', student.parentPhone || "");
+                    tr.innerHTML = `
+                        <td>${student.prn}</td>
+                        <td class="st-name">${student.name}</td>
+                        <td><input type="number" class="mark-total" value="100" style="width:60px; text-align:center;"></td>
+                        <td><input type="number" class="mark-obtained" placeholder="0" style="width:60px; text-align:center;"></td>
+                        <td><input type="text" class="remark-input" placeholder="..."></td>
+                        <td><button class="wa-btn" onclick="sendResultWhatsApp(this)">📲</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('currentSelectionLabel').innerText = `${className} | ${subject} | ${exam}`;
+                document.getElementById('studentListContainer').style.display = "block";
+            } catch (error) { alert("Error!"); } 
+            finally { loader.style.display = "none"; }
+        }
+
+        function sendResultWhatsApp(btn) {
+            const t = langData[currentLang];
+            const row = btn.closest('tr');
+            const name = row.querySelector('.st-name').innerText;
+            const phone = row.getAttribute('data-phone');
+            const total = row.querySelector('.mark-total').value;
+            const obtained = row.querySelector('.mark-obtained').value;
+            const subject = document.getElementById('resSubject').value;
+            const exam = document.getElementById('examType').value;
+
+            if(!obtained) return;
+
+            let message = t.waMsg.replace("{name}", name).replace("{exam}", exam).replace("{subject}", subject).replace("{obtained}", obtained).replace("{total}", total);
+            let cleanPhone = phone.toString().replace(/\D/g, '');
+            if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
+            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+        }
+
+        function saveMarks() {
+            const t = langData[currentLang];
+            const btn = document.getElementById('saveMarksBtn');
+            const rows = document.querySelectorAll('#markRows tr');
+            let marksData = [];
+            rows.forEach(row => {
+                marksData.push({
+                    prn: row.cells[0].innerText, name: row.cells[1].innerText,
+                    total: row.querySelector('.mark-total').value, obtained: row.querySelector('.mark-obtained').value,
+                    remark: row.querySelector('.remark-input').value
+                });
+            });
+
+            btn.disabled = true;
+            btn.innerText = (currentLang === 'mr' ? "सेव्ह होत आहे..." : "Saving...");
+
+            fetch(SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify({ type: "MarksUpdate", className: "Class " + document.getElementById('resClass').value, subject: document.getElementById('resSubject').value, exam: document.getElementById('examType').value, records: marksData })
+            })
+            .then(() => {
+                alert(t.alertSaved);
+                if(confirm(t.confirmWA)) {
+                    document.querySelectorAll('.wa-btn').forEach((b, idx) => {
+                        setTimeout(() => sendResultWhatsApp(b), idx * 2000);
+                    });
+                }
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = t.saveMarksBtn; });
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

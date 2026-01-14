@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <title>लॉगिन - यशोदीप क्लासेस</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 350px; text-align: center; position: relative; }
+        
+        /* Language Switcher Style */
+        .lang-switch { position: absolute; top: 15px; right: 15px; }
+        .lang-switch button { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        
+        h2 { color: #3498db; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button.login-btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .error { color: red; font-size: 14px; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="lang-switch">
+        <button id="langBtn" onclick="toggleLanguage()">English</button>
+    </div>
+
+    <h2 id="title">यशोदीप क्लासेस</h2>
+    <p id="subTitle">प्रणाली लॉगिन</p>
+    
+    <input type="text" id="username" placeholder="युजर आयडी">
+    <input type="password" id="password" placeholder="पासवर्ड">
+    
+    <button class="login-btn" id="loginBtn" onclick="checkLogin()">प्रवेश करा</button>
+    
+    <p id="errorMessage" class="error">चुकीचा आयडी किंवा पासवर्ड!</p>
+</div>
+
+<script>
+    let currentLang = 'mr'; // सुरुवातीची भाषा मराठी
+
+    const translations = {
+        mr: {
+            title: "यशोदीप क्लासेस",
+            subTitle: "प्रणाली लॉगिन",
+            userPlace: "युजर आयडी",
+            passPlace: "पासवर्ड",
+            loginBtn: "प्रवेश करा",
+            error: "चुकीचा आयडी किंवा पासवर्ड!",
+            langBtn: "English"
+        },
+        en: {
+            title: "Yashodeep Classes",
+            subTitle: "System Login",
+            userPlace: "User ID",
+            passPlace: "Password",
+            loginBtn: "Login",
+            error: "Invalid ID or Password!",
+            langBtn: "मराठी"
+        }
+    };
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'mr') ? 'en' : 'mr';
+        updateUI();
+    }
+
+    function updateUI() {
+        const t = translations[currentLang];
+        document.getElementById("title").innerText = t.title;
+        document.getElementById("subTitle").innerText = t.subTitle;
+        document.getElementById("username").placeholder = t.userPlace;
+        document.getElementById("password").placeholder = t.passPlace;
+        document.getElementById("loginBtn").innerText = t.loginBtn;
+        document.getElementById("errorMessage").innerText = t.error;
+        document.getElementById("langBtn").innerText = t.langBtn;
+    }
+
+    function checkLogin() {
+        const user = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
+
+        if (user === "owner" && pass === "owner@123") {
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("userRole", "owner");
+            sessionStorage.setItem("lang", currentLang); // निवडलेली भाषा सेव्ह करा
+            window.location.href = "dashboard.html";
+        } else if (user === "md" && pass === "md@123") {
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("userRole", "md");
+            sessionStorage.setItem("lang", currentLang); // निवडलेली भाषा सेव्ह करा
+            window.location.href = "dashboard.html";
+        } else {
+            document.getElementById("errorMessage").style.display = "block";
+        }
+    }
+</script>
+
+</body>
+</html>

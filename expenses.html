@@ -12,7 +12,6 @@
         .main { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
         
-        /* Language Switcher */
         .lang-container { position: absolute; top: 20px; right: 25px; }
         .lang-btn { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
 
@@ -36,12 +35,12 @@
 </head>
 <body>
 
-     <div class="sidebar">
+    <div class="sidebar">
         <h2 id="sideTitle">यशोदीप क्लासेस</h2>
-        <a href="dashboard.html"  id="navNewAdm">📝 नवीन ऍडमिशन</a>
+        <a href="dashboard.html" id="navNewAdm">📝 नवीन ऍडमिशन</a>
         <a href="view-students.html" id="navStudentList">📋 विद्यार्थी यादी</a>
         <a href="attendance.html" id="navAttendance">📅 हजेरी</a>
-        <a href="results.html" id="navResults">📊 मार्क अपडेट</a>
+        <a href="results.html" id="navResults">📊 निकाल/मार्क</a>
         <a href="fees.html" id="navFees">💰 फी रेकॉर्ड</a>
         <a href="expenses.html" style="background:#3498db" id="navExpenses">💸 खर्च व्यवस्थापन</a>
         <a href="#" onclick="logout()" id="navLogout">🚪 Log Out</a>
@@ -107,6 +106,9 @@
     <script>
         let currentLang = sessionStorage.getItem("lang") || 'mr';
 
+        // तुमची नवीन Script URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6jsJF54vLAvcOr5Bq0nPv9aKvDfpmkNmll_4FpztwE5SMneaCQhSilDkkSq6wJOvFtw/exec";
+
         const langData = {
             mr: {
                 sideTitle: "यशोदीप क्लासेस", navNewAdm: "📝 नवीन ऍडमिशन", navStudentList: "📋 विद्यार्थी यादी", navAttendance: "📅 हजेरी", navResults: "📊 निकाल/मार्क", navFees: "💰 फी रेकॉर्ड", navExpenses: "💸 खर्च व्यवस्थापन", navLogout: "🚪 Log Out",
@@ -128,14 +130,10 @@
             }
         };
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxW_E8lhPcNrG-rSRcCdofm19rD4o51kpowm44TuBojt0R619bgxVzvo8cXemKNfEHhwA/exec";
-
         document.addEventListener("DOMContentLoaded", function() {
             if (sessionStorage.getItem("isLoggedIn") !== "true") { window.location.href = "index.html"; return; }
-            
             document.getElementById('expDate').valueAsDate = new Date();
             document.getElementById('filterMonth').value = new Date().toISOString().substring(0, 7);
-            
             updateLanguageUI();
             loadExpenses();
         });
@@ -152,15 +150,12 @@
                 const el = document.getElementById(id);
                 if (el && typeof t[id] === 'string') el.innerText = t[id];
             }
-            
-            // Update Categories Dropdown
             const catSelect = document.getElementById('expCategory');
             catSelect.innerHTML = "";
             t.categories.forEach(cat => {
                 let opt = document.createElement("option");
                 opt.value = cat; opt.innerText = cat; catSelect.appendChild(opt);
             });
-            
             document.getElementById('langBtn').innerText = t.langBtn;
         }
 
@@ -176,34 +171,54 @@
             if(!amount || !date) { alert(t.alertFill); return; }
 
             btn.disabled = true;
-            loader.style.display = "inline";
-            loader.innerText = t.loaderSave;
+            if(loader) loader.style.display = "inline";
 
             try {
-                await fetch(SCRIPT_URL, { 
-                    method: 'POST', mode: 'no-cors', 
-                    body: JSON.stringify({ type: "AddExpense", date, category, amount, note }) 
+                // डेटा पाठवण्याची खात्रीशीर पद्धत
+                const response = await fetch(SCRIPT_URL, { 
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        type: "AddExpense", 
+                        date: date, 
+                        category: category, 
+                        amount: amount, 
+                        note: note 
+                    })
                 });
+
                 alert(t.alertSuccess);
                 document.getElementById('expAmount').value = "";
                 document.getElementById('expNote').value = "";
-                loadExpenses();
-            } catch (e) { alert("Error!"); } 
-            finally { btn.disabled = false; loader.style.display = "none"; }
+                loadExpenses(); // लिस्ट रिफ्रेश करा
+
+            } catch (e) { 
+                console.error("Save Error:", e);
+                alert("सेव्ह झाले नाही! कृपया नवीन Deployment URL वापरा."); 
+            } 
+            finally { 
+                btn.disabled = false; 
+                if(loader) loader.style.display = "none"; 
+            }
         }
 
         async function loadExpenses() {
             const t = langData[currentLang];
             const month = document.getElementById('filterMonth').value;
             const tbody = document.getElementById('expenseTableBody');
-            const loader = document.getElementById('tableLoader');
             
-            loader.style.display = "inline";
-            loader.innerText = t.loaderTable;
+            const loader = document.getElementById('tableLoader') || document.getElementById('initialMsg');
+            
+            if (loader) {
+                loader.style.display = "inline";
+                loader.innerText = t.loaderTable;
+            }
             
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getExpenses&month=${month}`);
-                const data = await response.json();
+                let data = await response.json();
+
+                if (typeof data === "string") { data = JSON.parse(data); }
+
                 tbody.innerHTML = "";
                 let totalExp = 0;
 
@@ -211,21 +226,24 @@
                     tbody.innerHTML = `<tr><td colspan='4'>${currentLang === 'mr' ? 'माहिती उपलब्ध नाही.' : 'No data available.'}</td></tr>`;
                 } else {
                     data.expenses.forEach(exp => {
-                        totalExp += Number(exp.amount);
+                        totalExp += Number(exp.amount || 0);
                         tbody.innerHTML += `
                             <tr>
-                                <td>${exp.date}</td>
-                                <td>${exp.category}</td>
-                                <td>${exp.note}</td>
-                                <td style="color: red; font-weight: bold;">₹ ${exp.amount}</td>
+                                <td>${exp.date || '-'}</td>
+                                <td>${exp.category || '-'}</td>
+                                <td>${exp.note || '-'}</td>
+                                <td style="color: red; font-weight: bold;">₹ ${exp.amount || 0}</td>
                             </tr>
                         `;
                     });
                 }
-                document.getElementById('totalExpense').innerText = "₹ " + totalExp;
-                document.getElementById('netProfit').innerText = "₹ " + (0 - totalExp); // Income logic can be added later
-            } catch (e) { tbody.innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>"; } 
-            finally { loader.style.display = "none"; }
+                if(document.getElementById('totalExpense')) document.getElementById('totalExpense').innerText = "₹ " + totalExp;
+                if(document.getElementById('netProfit')) document.getElementById('netProfit').innerText = "₹ " + (0 - totalExp); 
+            } catch (e) { 
+                console.error("Fetch Error:", e);
+                tbody.innerHTML = "<tr><td colspan='4'>डेटा लोड होऊ शकला नाही.</td></tr>"; 
+            } 
+            finally { if(loader) loader.style.display = "none"; }
         }
 
         function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
